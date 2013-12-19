@@ -1,0 +1,88 @@
+<h2 id="introduction">Introduction</h2>
+
+<p>A Java bean property is defined by the methods which follow the related naming convention:</p>
+
+<h3 id="accessor">Accessor</h3>
+
+<p><em>PropertyType</em> <code>get</code><em>PropertyName</em><code>();</code></p>
+
+<h3 id="mutator">Mutator</h3>
+
+<p><code>void set</code><em>PropertyName</em><code>(</code><em>PropertyType</em><code>);</code></p>
+
+<p>The presence of either such method defines a property. Commonly a property will be implemented by having the accessor access, and/or the modifier modify, a field:</p>
+
+<p><code>private</code><em>PropertyType propertyName</em><code>;</code></p>
+
+<p>It is customary to handle the property via the accessor and/or mutator, therefore there is most often no reason for the field to have e.g. <code>protected</code> access.</p>
+
+<p>The goal of this document is to describe the modeling of Property in terms of the <code>java-parser</code> APIs using a number of interfaces:</p>
+
+<h3 id="propertyo">Property&lt;O&gt;</h3>
+
+<p>Describes a readable Java bean property:</p>
+
+<ul>
+<li><code>Type&lt;O&gt; getType();</code></li>
+<li><code>String getName();</code></li>
+<li><code>boolean isReadable();</code></li>
+<li><code>boolean isWritable();</code></li>
+<li><code>Method&lt;O&gt; getAccessor();</code></li>
+<li><code>Method&lt;O&gt; getMutator();</code></li>
+<li><code>boolean hasField();</code></li>
+<li><code>Field&lt;O&gt; getField();</code></li>
+</ul>
+
+<h3 id="propertyholdero">PropertyHolder&lt;O&gt;</h3>
+
+<p>Describes a Java type which may expose one or more Java bean properties:</p>
+
+<ul>
+<li><code>boolean hasProperty(String);</code></li>
+<li><code>boolean hasProperty(Property);</code></li>
+<li><code>Property&lt;O&gt; getProperty(String);</code></li>
+<li><code>List&lt;? extends Property&lt;O&gt;&gt; getProperties();</code></li>
+</ul>
+
+<h3 id="propertysourceo-extends-propertyo">PropertySource&lt;O&gt; extends Property&lt;O&gt;</h3>
+
+<p>Describes a writable Java bean property:</p>
+
+<ul>
+<li><code>PropertySource&lt;O&gt; setType(Class&lt;?&gt; clazz);</code></li>
+<li><code>PropertySource&lt;O&gt; setType(String type);</code></li>
+<li><code>PropertySource&lt;O&gt; setType(JavaType&lt;?&gt; entity);</code></li>
+<li><code>MethodSource&lt;O&gt; createAccessor();</code></li>
+<li><code>PropertySource&lt;O&gt; removeAccessor();</code></li>
+<li><code>MethodSource&lt;O&gt; createMutator();</code></li>
+<li><code>PropertySource&lt;O&gt; removeMutator();</code></li>
+<li><code>FieldSource&lt;O&gt; createField();</code></li>
+<li><code>PropertySource&lt;O&gt; removeField();</code></li>
+</ul>
+
+<h3 id="propertyholdersourceo-extends-propertyholdero">PropertyHolderSource&lt;O&gt; extends PropertyHolder&lt;O&gt;</h3>
+
+<p>Describes a Java source type which permits the creation and removal of its properties:</p>
+
+<ul>
+<li><code>PropertySource&lt;O&gt; addProperty();</code></li>
+<li><code>PropertySource&lt;O&gt; addProperty(String type, String name);</code></li>
+<li><code>O removeProperty(Property&lt;O&gt; property);</code></li>
+<li><code>@Override List&lt;PropertySource&lt;O&gt;&gt; getProperties();</code></li>
+<li><code>@Override PropertySource&lt;O&gt; getProperty(String name);</code></li>
+</ul>
+
+<h2 id="implementation-considerations">Implementation considerations</h2>
+
+<ul>
+<li><code>JavaClass&lt;0&gt; implements PropertyHolder&lt;O&gt;</code></li>
+<li><code>JavaInterface&lt;O&gt; implements PropertyHolder&lt;O&gt;</code></li>
+<li>Should <code>JavaEnum&lt;O&gt;</code> implement <code>PropertyHolder&lt;O&gt;</code>?  Despite the fact that mutator methods are ill-advised, it is possible and occasionally quite convenient for these to expose Java bean properties.</li>
+<li><code>JavaClassSource&lt;O&gt; implements PropertyHolderSource&lt;O&gt;</code> (normal field/accessor/mutator when creating new)</li>
+<li><code>JavaInterfaceSource&lt;O&gt; implements PropertyHolderSource&lt;O&gt;</code> (abstract methods, no fields)</li>
+<li><em>if</em> <code>JavaEnumSource&lt;O&gt; implements PropertyHolderSource&lt;O&gt;</code>, omit setters when creating new; consider making fields <code>final</code> (would create compilation errors which would have to be addressed by the java-parser consumer)</li>
+<li><code>PropertyHolderSource</code> implementations should throw <code>IllegalStateException</code> when requested to create already-existing properties</li>
+<li><code>PropertySource</code> implementations should throw <code>IllegalStateException</code> when requested to create already-existing members</li>
+<li>Should the <code>Field</code> concern be broken into separate sub-interfaces?  Feels a little heavy but perhaps worth considering.</li>
+<li>Because everything discussed is an encapsulation of some lower-level concept already represented in the <code>java-parser</code> API, it should be possible to write “agnostic” implementations of <code>Property</code> and <code>PropertySource</code> that can be applied to the artifacts created by any <code>JavaParserProvider</code> implementation. This ties in with the “abstract implementation module” idea that has been kicked around.</li>
+</ul>
