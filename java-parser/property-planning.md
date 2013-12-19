@@ -69,3 +69,4 @@ Describes a Java source type which permits the creation and removal of its prope
  * `PropertyHolderSource` implementations should throw `IllegalStateException` when requested to create already-existing properties
  * `PropertySource` implementations should throw `IllegalStateException` when requested to create already-existing members
  * Should the `Field` concern be broken into separate sub-interfaces?  Feels a little heavy but perhaps worth considering.
+ * Because everything discussed is an encapsulation of some lower-level concept already represented in the `java-parser` API, it should be possible to write "agnostic" implementations of `Property` and `PropertySource` that can be applied to the artifacts created by any `JavaParserProvider` implementation. This ties in with the "abstract implementation module" idea that has been kicked around.
